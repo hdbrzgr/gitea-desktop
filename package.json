@@ -8,7 +8,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "build:macos": "tauri build && ./scripts/sign-macos.sh",
+    "dist:macos": "tauri build && ./scripts/sign-macos.sh && cd \"src-tauri/target/release/bundle/macos\" && zip -r -y \"Gitea Desktop.zip\" \"Gitea Desktop.app\""
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
