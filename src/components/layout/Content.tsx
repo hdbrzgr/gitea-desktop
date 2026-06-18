@@ -6,6 +6,7 @@ import { ChangesView } from "../changes/ChangesView";
 import { BranchManager } from "../branches/BranchManager";
 import { HistoryView } from "../history/HistoryView";
 import { PullList } from "../pulls/PullList";
+import giteaLogo from "../../assets/gitea-logo.svg";
 
 export function Content() {
   const activeRepoId = useUiStore((s) => s.activeRepoId);
@@ -54,9 +55,11 @@ function EmptyState() {
   return (
     <div className="flex flex-1 items-center justify-center bg-[var(--color-canvas)]">
       <div className="max-w-sm text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-surface)] text-2xl font-bold text-[var(--color-accent)]">
-          G
-        </div>
+        <img
+          src={giteaLogo}
+          alt="Gitea"
+          className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-[var(--color-surface)] p-2"
+        />
         <h1 className="mb-1 text-lg font-semibold">Welcome to Gitea Desktop</h1>
         <p className="mb-5 text-sm text-[var(--color-fg-muted)]">
           Clone a remote repository or open a local one to start managing your

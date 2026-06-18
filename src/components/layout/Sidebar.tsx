@@ -5,6 +5,7 @@ import { useUiStore } from "../../store/ui";
 import { useAccountsStore } from "../../store/accounts";
 import { useReposStore } from "../../store/repos";
 import { cn } from "../../lib/cn";
+import giteaLogo from "../../assets/gitea-logo.svg";
 
 export function Sidebar() {
   const openDialog = useUiStore((s) => s.openDialog);
@@ -14,9 +15,7 @@ export function Sidebar() {
     <aside className="flex w-64 shrink-0 flex-col border-r border-[var(--color-border-muted)] bg-[var(--color-canvas-inset)]">
       {/* Brand */}
       <div className="flex h-12 items-center gap-2 border-b border-[var(--color-border-muted)] px-4">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--color-accent-emphasis)] text-white text-xs font-bold">
-          G
-        </div>
+        <img src={giteaLogo} alt="Gitea" className="h-6 w-6" />
         <span className="font-semibold text-sm">Gitea Desktop</span>
       </div>
 
