@@ -22,6 +22,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             // Load persisted config (accounts + repos) into app state.
             let config = load_config().unwrap_or_default();
@@ -47,7 +48,6 @@ pub fn run() {
             commands::repo::list_local_repos,
             commands::repo::remove_repo,
             commands::repo::reveal_in_finder,
-            commands::repo::pick_directory,
             commands::git_ops::git_status,
             commands::git_ops::git_diff,
             commands::git_ops::git_stage,

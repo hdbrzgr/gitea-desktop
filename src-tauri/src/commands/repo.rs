@@ -24,17 +24,6 @@ fn repo_id_from_path(path: &Path) -> String {
     format!("repo_{normalized}")
 }
 
-/// Open the OS folder picker and return the selected directory, or `None`
-/// if the user cancelled. Uses the opener plugin's `open_path` indirectly —
-/// for a true picker we'd use the `tauri-plugin-dialog`, but opener can at
-/// least reveal a path. Here we expose a manual path-input flow and validate.
-#[tauri::command]
-pub fn pick_directory() -> AppResult<Option<String>> {
-    // Lightweight: return None so the frontend uses a manual text input.
-    // (A native picker can be added via tauri-plugin-dialog later.)
-    Ok(None)
-}
-
 /// Clone `url` into `parent_dir/<repo_name>`. Returns the new LocalRepo.
 #[tauri::command]
 pub async fn clone_repo(
