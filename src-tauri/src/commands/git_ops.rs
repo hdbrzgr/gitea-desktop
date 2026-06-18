@@ -1,22 +1,26 @@
 //! Working-directory git commands: status, diff, stage, unstage, discard,
-//! commit, fetch, pull, push. All operate on a repo identified by id
-//! (resolved to a path via the helpers module).
+//! commit, fetch, pull, push. Each accepts an optional `sub_path` — when set,
+//! the command runs inside that submodule directory instead of the
+//! superproject root, so you can commit/push/pull a submodule exactly like
+//! the main repo.
 
 use tauri::State;
 
-use crate::commands::helpers::{auth_header_for_repo, repo_path};
+use crate::commands::helpers::{auth_header_for_repo, repo_workdir};
 use crate::config::store::ConfigState;
 use crate::error::{AppError, AppResult};
 use crate::git::run_in;
 use crate::git::status::{parse_status, GitStatus};
 
-/// Working-directory status (porcelain v1, parsed).
+/// Working-directory status (porcelain v1, parsed). `sub_path` selects a
+/// submodule; omit/None for the superproject.
 #[tauri::command]
 pub async fn git_status(
     repo_id: String,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<GitStatus> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
     let out = run_in(&path, &["status", "--porcelain=v1", "-z", "--branch"], None).await?;
     let raw = out.require_success("git status")?;
     Ok(parse_status(&raw))
@@ -31,12 +35,13 @@ pub async fn git_diff(
     path: String,
     staged: bool,
     untracked: bool,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<String> {
-    let repo_path = repo_path(&state, &repo_id)?;
+    let workdir = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
 
     if untracked {
-        let full = repo_path.join(&path);
+        let full = workdir.join(&path);
         let bytes = tokio::fs::read(&full)
             .await
             .map_err(|e| AppError::Git(format!("Failed to read {path}: {e}")))?;
@@ -51,7 +56,7 @@ pub async fn git_diff(
     args.push("--".into());
     args.push(path);
     let refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-    let out = run_in(&repo_path, &refs, None).await?;
+    let out = run_in(&workdir, &refs, None).await?;
     out.require_success("git diff")
 }
 
@@ -60,9 +65,10 @@ pub async fn git_diff(
 pub async fn git_stage(
     repo_id: String,
     paths: Vec<String>,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
     let mut args: Vec<String> = vec!["add".into(), "--".into()];
     args.extend(paths);
     let refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
@@ -76,9 +82,10 @@ pub async fn git_stage(
 pub async fn git_unstage(
     repo_id: String,
     paths: Vec<String>,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
     let mut args: Vec<String> = vec!["reset".into(), "--".into()];
     args.extend(paths);
     let refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
@@ -94,9 +101,10 @@ pub async fn git_discard(
     repo_id: String,
     paths: Vec<String>,
     untracked: Vec<String>,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
 
     if !paths.is_empty() {
         let mut args: Vec<String> = vec!["checkout".into(), "--".into()];
@@ -127,9 +135,10 @@ pub async fn git_discard(
 pub async fn git_commit(
     repo_id: String,
     message: String,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<String> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
     let out = run_in(
         &path,
         &["commit", "--no-verify", "-m", message.as_str()],
@@ -141,32 +150,37 @@ pub async fn git_commit(
 }
 
 /// Fetch from origin (no merge). Uses the account token via http.extraHeader
-/// when the repo has a matching account.
+/// when the repo has a matching account. `sub_path` fetches a submodule.
 #[tauri::command]
 pub async fn git_fetch(
     repo_id: String,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
     let auth = auth_header_for_repo(&state, &repo_id)?;
     let out = run_in(&path, &["fetch", "--prune", "origin"], auth.as_deref()).await?;
     out.require_success("git fetch")?;
     Ok(())
 }
 
-/// Pull (fast-forward) from origin. `recurse_submodules` defaults to true,
-/// so a pull that moves submodule pointers also checks out the new commits
-/// in each submodule (`--recurse-submodules`).
+/// Pull (fast-forward) from origin. For the superproject, `recurse_submodules`
+/// defaults to true so a pull that moves submodule pointers also checks out
+/// the new commits. For a submodule (sub_path set), pulls that submodule's
+/// own remote.
 #[tauri::command]
 pub async fn git_pull(
     repo_id: String,
     recurse_submodules: Option<bool>,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
     let auth = auth_header_for_repo(&state, &repo_id)?;
     let mut args: Vec<String> = vec!["pull".into(), "--ff-only".into()];
-    if recurse_submodules.unwrap_or(true) {
+    // Only the superproject pull recurses; a submodule's own pull is just
+    // its own history.
+    if sub_path.is_none() && recurse_submodules.unwrap_or(true) {
         args.push("--recurse-submodules".into());
     }
     args.push("origin".into());
@@ -177,12 +191,14 @@ pub async fn git_pull(
 }
 
 /// Push the current branch to origin, setting upstream on first push.
+/// `sub_path` pushes a submodule's own commits to its remote.
 #[tauri::command]
 pub async fn git_push(
     repo_id: String,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
     let auth = auth_header_for_repo(&state, &repo_id)?;
     let out = run_in(&path, &["push", "-u", "origin", "HEAD"], auth.as_deref()).await?;
     out.require_success("git push")?;

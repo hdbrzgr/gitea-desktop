@@ -24,10 +24,12 @@ import { cn } from "../../lib/cn";
 
 interface Props {
   repoId: string;
+  subPath?: string | null;
 }
 
-export function BranchManager({ repoId }: Props) {
-  const { branches, loading, error, refetch } = useBranches(repoId);
+export function BranchManager({ repoId, subPath }: Props) {
+  const sub = subPath ?? null;
+  const { branches, loading, error, refetch } = useBranches(repoId, sub);
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -40,7 +42,7 @@ export function BranchManager({ repoId }: Props) {
     setBusy(true);
     setActionError(null);
     try {
-      await createBranch(repoId, newName.trim(), undefined, true);
+      await createBranch(repoId, newName.trim(), undefined, true, sub ?? undefined);
       setNewName("");
       setCreating(false);
       refetch();
@@ -55,7 +57,7 @@ export function BranchManager({ repoId }: Props) {
     setBusy(true);
     setActionError(null);
     try {
-      await checkoutBranch(repoId, name);
+      await checkoutBranch(repoId, name, sub ?? undefined);
       refetch();
     } catch (e) {
       setActionError((e as { message?: string })?.message ?? "Failed to switch branch.");
@@ -73,7 +75,7 @@ export function BranchManager({ repoId }: Props) {
     setBusy(true);
     setActionError(null);
     try {
-      await deleteBranch(repoId, b.name, true);
+      await deleteBranch(repoId, b.name, true, sub ?? undefined);
       refetch();
     } catch (e) {
       setActionError((e as { message?: string })?.message ?? "Failed to delete branch.");
@@ -92,8 +94,8 @@ export function BranchManager({ repoId }: Props) {
     setActionError(null);
     try {
       // git branch -m renames the current branch; checkout first.
-      await checkoutBranch(repoId, oldName);
-      await renameBranch(repoId, renameValue.trim());
+      await checkoutBranch(repoId, oldName, sub ?? undefined);
+      await renameBranch(repoId, renameValue.trim(), sub ?? undefined);
       setRenaming(null);
       refetch();
     } catch (e) {

@@ -1,7 +1,11 @@
 /** The "Changes" tab: a three-pane layout.
  *   [FileList] [DiffViewer] [CommitForm]
  * FileList and CommitForm share the active repo's status; mutations
- * (stage/unstage/discard/commit) trigger a status refetch. */
+ * (stage/unstage/discard/commit) trigger a status refetch.
+ *
+ * When `subPath` is provided, every operation runs inside that submodule —
+ * so you can stage, commit, and diff a submodule's own changes just like the
+ * parent repo. */
 import { useMemo, useState } from "react";
 import { useGitStatus } from "../../hooks/useGitStatus";
 import { gitCommit, gitDiscard, gitStage, gitUnstage } from "../../api/commands";
@@ -12,33 +16,39 @@ import type { FileChange } from "../../api/types";
 
 interface Props {
   repoId: string;
+  subPath?: string | null;
 }
 
-export function ChangesView({ repoId }: Props) {
-  const { status, loading, error, refetch } = useGitStatus(repoId);
+export function ChangesView({ repoId, subPath }: Props) {
+  const sub = subPath ?? null;
+  const { status, loading, error, refetch } = useGitStatus(repoId, sub);
 
   const [selected, setSelected] = useState<string | null>(null);
   const [committing, setCommitting] = useState(false);
 
   const files: FileChange[] = status?.files ?? [];
 
-  // Figure out whether the selected file is staged (for the diff viewer).
   const selectedFile = useMemo(
     () => files.find((f) => f.path === selected) ?? null,
     [files, selected],
   );
 
   const stage = async (path: string) => {
-    await gitStage(repoId, [path]);
+    await gitStage(repoId, [path], sub ?? undefined);
     await refetch();
   };
   const unstage = async (path: string) => {
-    await gitUnstage(repoId, [path]);
+    await gitUnstage(repoId, [path], sub ?? undefined);
     await refetch();
   };
   const discard = async (path: string, untracked: boolean) => {
     if (!confirm(`Discard changes to ${path}?\nThis cannot be undone.`)) return;
-    await gitDiscard(repoId, untracked ? [] : [path], untracked ? [path] : []);
+    await gitDiscard(
+      repoId,
+      untracked ? [] : [path],
+      untracked ? [path] : [],
+      sub ?? undefined,
+    );
     if (selected === path) setSelected(null);
     await refetch();
   };
@@ -46,7 +56,7 @@ export function ChangesView({ repoId }: Props) {
   const commit = async (message: string) => {
     setCommitting(true);
     try {
-      await gitCommit(repoId, message);
+      await gitCommit(repoId, message, sub ?? undefined);
       await refetch();
       setSelected(null);
     } finally {
@@ -92,6 +102,7 @@ export function ChangesView({ repoId }: Props) {
       {selectedFile ? (
         <DiffViewer
           repoId={repoId}
+          subPath={sub}
           path={selectedFile.path}
           staged={selectedFile.x !== " " && selectedFile.x !== "?"}
           status={selectedFile.status}
@@ -101,9 +112,9 @@ export function ChangesView({ repoId }: Props) {
           {files.length === 0 ? (
             <>
               <div className="text-base font-medium text-[var(--color-fg-default)]">
-                No local changes
+                {sub ? "No changes in submodule" : "No local changes"}
               </div>
-              <div>Working directory is clean.</div>
+              <div>{sub ? `${sub} is clean.` : "Working directory is clean."}</div>
             </>
           ) : (
             <span>Select a file to view its diff</span>

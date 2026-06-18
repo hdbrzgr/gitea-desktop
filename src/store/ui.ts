@@ -17,10 +17,14 @@ export type Dialog =
 interface UiState {
   /** id of the selected LocalRepo, or null when none is open. */
   activeRepoId: string | null;
+  /** When set, operations target this submodule path within the active repo
+   * instead of the superproject root. Cleared when switching repos. */
+  activeSubmodule: string | null;
   tab: Tab;
   dialog: Dialog;
 
   setActiveRepo: (id: string | null) => void;
+  setActiveSubmodule: (subPath: string | null) => void;
   setTab: (tab: Tab) => void;
   openDialog: (dialog: Exclude<Dialog, { kind: "none" }>) => void;
   closeDialog: () => void;
@@ -30,11 +34,15 @@ export const useUiStore = create<UiState>()(
   persist(
     (set) => ({
       activeRepoId: null,
+      activeSubmodule: null,
       tab: "changes",
       dialog: { kind: "none" },
 
-      // Switching repos resets to the Changes tab — the most common landing spot.
-      setActiveRepo: (id) => set({ activeRepoId: id, tab: "changes" }),
+      // Switching repos resets to the Changes tab and clears any selected
+      // submodule scope.
+      setActiveRepo: (id) =>
+        set({ activeRepoId: id, activeSubmodule: null, tab: "changes" }),
+      setActiveSubmodule: (subPath) => set({ activeSubmodule: subPath }),
       setTab: (tab) => set({ tab }),
       openDialog: (dialog) => set({ dialog }),
       closeDialog: () => set({ dialog: { kind: "none" } }),

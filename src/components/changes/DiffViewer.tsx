@@ -12,9 +12,10 @@ interface Props {
   /** True when the file is fully staged (we diff index vs HEAD). */
   staged: boolean;
   status: FileStatus;
+  subPath?: string | null;
 }
 
-export function DiffViewer({ repoId, path, staged, status }: Props) {
+export function DiffViewer({ repoId, path, staged, status, subPath }: Props) {
   const [diff, setDiff] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +25,7 @@ export function DiffViewer({ repoId, path, staged, status }: Props) {
     setLoading(true);
     setError(null);
     const untracked = status === "untracked";
-    gitDiff(repoId, path, staged, untracked)
+    gitDiff(repoId, path, staged, untracked, subPath ?? undefined)
       .then((d) => {
         if (!cancelled) setDiff(d);
       })

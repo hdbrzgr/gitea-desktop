@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  FolderInput,
 } from "lucide-react";
 import { Dialog } from "../common/Dialog";
 import { Button } from "../common/Button";
@@ -26,6 +27,7 @@ import {
   type SubmoduleState,
 } from "../../api/commands";
 import { basename } from "../../lib/format";
+import { useUiStore } from "../../store/ui";
 
 interface Props {
   repoId: string;
@@ -34,10 +36,22 @@ interface Props {
 }
 
 export function SubmodulesDialog({ repoId, repoName, onClose }: Props) {
+  const setTab = useUiStore((s) => s.setTab);
+  const setActiveSubmodule = useUiStore((s) => s.setActiveSubmodule);
+  const closeDialog = useUiStore((s) => s.closeDialog);
+
   const [submodules, setSubmodules] = useState<Submodule[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+
+  // Open a submodule's working copy in the Changes tab — scopes every
+  // status/stage/commit/push/pull operation to that submodule.
+  const openInChanges = (sub: Submodule) => {
+    setActiveSubmodule(sub.path);
+    setTab("changes");
+    closeDialog();
+  };
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -186,6 +200,14 @@ export function SubmodulesDialog({ repoId, repoName, onClose }: Props) {
                   </div>
                 </div>
                 <StateBadge state={sub.state} />
+                <button
+                  onClick={() => openInChanges(sub)}
+                  className="flex shrink-0 items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-xs hover:bg-[var(--color-surface-hover)] cursor-pointer"
+                  title={`Open ${sub.path} to commit/push/pull its changes`}
+                >
+                  <FolderInput size={12} />
+                  Open
+                </button>
               </li>
             ))}
           </ul>

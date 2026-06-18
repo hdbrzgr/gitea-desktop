@@ -12,10 +12,17 @@ interface Props {
   repoId: string;
   branches: LocalBranch[];
   current: LocalBranch | null;
+  subPath?: string | null;
   onAfterChange: () => void;
 }
 
-export function BranchPicker({ repoId, branches, current, onAfterChange }: Props) {
+export function BranchPicker({
+  repoId,
+  branches,
+  current,
+  subPath,
+  onAfterChange,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [creating, setCreating] = useState(false);
@@ -49,7 +56,7 @@ export function BranchPicker({ repoId, branches, current, onAfterChange }: Props
     setBusy(true);
     setError(null);
     try {
-      await doCheckout(repoId, name);
+      await doCheckout(repoId, name, subPath ?? undefined);
       setOpen(false);
       setFilter("");
       onAfterChange();
@@ -65,7 +72,7 @@ export function BranchPicker({ repoId, branches, current, onAfterChange }: Props
     setBusy(true);
     setError(null);
     try {
-      await doCreate(repoId, newName.trim(), undefined, true);
+      await doCreate(repoId, newName.trim(), undefined, true, subPath ?? undefined);
       setNewName("");
       setCreating(false);
       setOpen(false);

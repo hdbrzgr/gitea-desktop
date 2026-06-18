@@ -6,6 +6,7 @@ import { Button } from "../common/Button";
 
 interface Props {
   repoId: string;
+  subPath?: string | null;
   ahead: number;
   behind: number;
   hasUpstream: boolean;
@@ -16,6 +17,7 @@ type Op = "fetch" | "pull" | "push" | null;
 
 export function SyncButtons({
   repoId,
+  subPath,
   ahead,
   behind,
   hasUpstream,
@@ -29,9 +31,10 @@ export function SyncButtons({
     setOp(which);
     setError(null);
     try {
-      if (which === "fetch") await gitFetch(repoId);
-      else if (which === "pull") await gitPull(repoId);
-      else await gitPush(repoId);
+      const sub = subPath ?? undefined;
+      if (which === "fetch") await gitFetch(repoId, sub);
+      else if (which === "pull") await gitPull(repoId, sub);
+      else await gitPush(repoId, sub);
       onAfter();
     } catch (e) {
       setError((e as { message?: string })?.message ?? `${which} failed.`);

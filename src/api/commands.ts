@@ -121,36 +121,68 @@ export const revealInFinder = (repoId: string) =>
   invoke<void>("reveal_in_finder", { repoId });
 
 // --- Git working directory -------------------------------------------------
+// Each command takes an optional `subPath` — when set, the operation runs
+// inside that submodule directory instead of the superproject root.
 
-export const gitStatus = (repoId: string) =>
-  invoke<import("./types").GitStatus>("git_status", { repoId });
+export const gitStatus = (repoId: string, subPath?: string) =>
+  invoke<import("./types").GitStatus>("git_status", {
+    repoId,
+    subPath: subPath ?? null,
+  });
 
 export const gitDiff = (
   repoId: string,
   path: string,
   staged: boolean,
   untracked: boolean,
+  subPath?: string,
 ) =>
-  invoke<string>("git_diff", { repoId, path, staged, untracked });
+  invoke<string>("git_diff", {
+    repoId,
+    path,
+    staged,
+    untracked,
+    subPath: subPath ?? null,
+  });
 
-export const gitStage = (repoId: string, paths: string[]) =>
-  invoke<void>("git_stage", { repoId, paths });
+export const gitStage = (repoId: string, paths: string[], subPath?: string) =>
+  invoke<void>("git_stage", { repoId, paths, subPath: subPath ?? null });
 
-export const gitUnstage = (repoId: string, paths: string[]) =>
-  invoke<void>("git_unstage", { repoId, paths });
+export const gitUnstage = (repoId: string, paths: string[], subPath?: string) =>
+  invoke<void>("git_unstage", { repoId, paths, subPath: subPath ?? null });
 
 export const gitDiscard = (
   repoId: string,
   paths: string[],
   untracked: string[],
-) => invoke<void>("git_discard", { repoId, paths, untracked });
+  subPath?: string,
+) =>
+  invoke<void>("git_discard", {
+    repoId,
+    paths,
+    untracked,
+    subPath: subPath ?? null,
+  });
 
-export const gitCommit = (repoId: string, message: string) =>
-  invoke<string>("git_commit", { repoId, message });
+export const gitCommit = (repoId: string, message: string, subPath?: string) =>
+  invoke<string>("git_commit", {
+    repoId,
+    message,
+    subPath: subPath ?? null,
+  });
 
-export const gitFetch = (repoId: string) => invoke<void>("git_fetch", { repoId });
-export const gitPull = (repoId: string) => invoke<void>("git_pull", { repoId });
-export const gitPush = (repoId: string) => invoke<void>("git_push", { repoId });
+export const gitFetch = (repoId: string, subPath?: string) =>
+  invoke<void>("git_fetch", { repoId, subPath: subPath ?? null });
+
+export const gitPull = (repoId: string, subPath?: string) =>
+  invoke<void>("git_pull", {
+    repoId,
+    recurseSubmodules: null,
+    subPath: subPath ?? null,
+  });
+
+export const gitPush = (repoId: string, subPath?: string) =>
+  invoke<void>("git_push", { repoId, subPath: subPath ?? null });
 
 // --- Branches (local) ------------------------------------------------------
 
@@ -163,30 +195,50 @@ export interface LocalBranch {
   behind: number | null;
 }
 
-export const listBranches = (repoId: string) =>
-  invoke<LocalBranch[]>("list_branches", { repoId });
+export const listBranches = (repoId: string, subPath?: string) =>
+  invoke<LocalBranch[]>("list_branches", { repoId, subPath: subPath ?? null });
 
 export const createBranch = (
   repoId: string,
   name: string,
   startPoint?: string,
   checkout = true,
+  subPath?: string,
 ) =>
   invoke<void>("create_branch", {
     repoId,
     name,
     startPoint: startPoint ?? null,
     checkout,
+    subPath: subPath ?? null,
   });
 
-export const checkoutBranch = (repoId: string, name: string) =>
-  invoke<void>("checkout_branch", { repoId, name });
+export const checkoutBranch = (repoId: string, name: string, subPath?: string) =>
+  invoke<void>("checkout_branch", {
+    repoId,
+    name,
+    subPath: subPath ?? null,
+  });
 
-export const deleteBranch = (repoId: string, name: string, force = false) =>
-  invoke<void>("delete_branch", { repoId, name, force });
+export const deleteBranch = (
+  repoId: string,
+  name: string,
+  force = false,
+  subPath?: string,
+) =>
+  invoke<void>("delete_branch", {
+    repoId,
+    name,
+    force,
+    subPath: subPath ?? null,
+  });
 
-export const renameBranch = (repoId: string, newName: string) =>
-  invoke<void>("rename_branch", { repoId, newName });
+export const renameBranch = (repoId: string, newName: string, subPath?: string) =>
+  invoke<void>("rename_branch", {
+    repoId,
+    newName,
+    subPath: subPath ?? null,
+  });
 
 // --- History ---------------------------------------------------------------
 

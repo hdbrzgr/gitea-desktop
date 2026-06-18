@@ -10,23 +10,30 @@ import giteaLogo from "../../assets/gitea-logo.svg";
 
 export function Content() {
   const activeRepoId = useUiStore((s) => s.activeRepoId);
+  const activeSubmodule = useUiStore((s) => s.activeSubmodule);
 
   if (!activeRepoId) return <EmptyState />;
 
-  return <TabContent repoId={activeRepoId} />;
+  return <TabContent repoId={activeRepoId} subPath={activeSubmodule} />;
 }
 
-function TabContent({ repoId }: { repoId: string }) {
+function TabContent({
+  repoId,
+  subPath,
+}: {
+  repoId: string;
+  subPath: string | null;
+}) {
   const tab = useUiStore((s) => s.tab);
   const repos = useReposStore((s) => s.repos);
   const repo = repos.find((r) => r.id === repoId);
 
   if (tab === "changes") {
-    return <ChangesView repoId={repoId} />;
+    return <ChangesView repoId={repoId} subPath={subPath} />;
   }
 
   if (tab === "branches") {
-    return <BranchManager repoId={repoId} />;
+    return <BranchManager repoId={repoId} subPath={subPath} />;
   }
 
   if (tab === "history") {

@@ -1,11 +1,11 @@
 //! Branch commands: list, current, create, checkout, delete, rename.
-//! All operate on the local working copy; remote branch state is read via
-//! `git fetch` (Phase 5 sync commands).
+//! Operate on the superproject by default, or a submodule when `sub_path`
+//! is provided.
 
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
-use crate::commands::helpers::repo_path;
+use crate::commands::helpers::repo_workdir;
 use crate::config::store::ConfigState;
 use crate::error::AppResult;
 use crate::git::run_in;
@@ -29,9 +29,10 @@ pub struct LocalBranch {
 #[tauri::command]
 pub async fn list_branches(
     repo_id: String,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<Vec<LocalBranch>> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
 
     // `--format` gives us a stable, parseable line per branch.
     // We use a NUL-free custom format: name\tsha\tupstream\tahead,behind\t*flag
@@ -87,9 +88,10 @@ pub async fn create_branch(
     name: String,
     start_point: Option<String>,
     checkout: Option<bool>,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
     let start = start_point.as_deref().unwrap_or("HEAD");
     let do_checkout = checkout.unwrap_or(true);
     let out = run_in(&path, &["branch", name.as_str(), start], None).await?;
@@ -106,9 +108,10 @@ pub async fn create_branch(
 pub async fn checkout_branch(
     repo_id: String,
     name: String,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
     let out = run_in(&path, &["checkout", name.as_str()], None).await?;
     out.require_success("git checkout")?;
     Ok(())
@@ -120,9 +123,10 @@ pub async fn delete_branch(
     repo_id: String,
     name: String,
     force: Option<bool>,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
     let flag = if force.unwrap_or(false) { "-D" } else { "-d" };
     let out = run_in(&path, &["branch", flag, name.as_str()], None).await?;
     out.require_success("git branch -d")?;
@@ -134,9 +138,10 @@ pub async fn delete_branch(
 pub async fn rename_branch(
     repo_id: String,
     new_name: String,
+    sub_path: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
-    let path = repo_path(&state, &repo_id)?;
+    let path = repo_workdir(&state, &repo_id, sub_path.as_deref())?;
     let out = run_in(&path, &["branch", "-m", new_name.as_str()], None).await?;
     out.require_success("git branch -m")?;
     Ok(())
