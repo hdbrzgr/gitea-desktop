@@ -8,6 +8,7 @@ import { useBranches } from "../../hooks/useBranches";
 import { useGitStatus } from "../../hooks/useGitStatus";
 import { BranchPicker } from "./BranchPicker";
 import { SyncButtons } from "./SyncButtons";
+import { OpenWithMenu } from "./OpenWithMenu";
 
 export function Toolbar() {
   const activeRepoId = useUiStore((s) => s.activeRepoId);
@@ -87,6 +88,9 @@ export function Toolbar() {
               Submodules
             </button>
           )}
+
+          {/* Open with: Terminal / VS Code / Cursor / Zed / Finder */}
+          <OpenWithMenu repoId={repo.id} subPath={sub} />
         </>
       )}
 

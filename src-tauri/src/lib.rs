@@ -71,6 +71,8 @@ pub fn run() {
             commands::submodules::update_submodules,
             commands::submodules::sync_submodules,
             commands::submodules::fetch_submodule_updates,
+            commands::open_with::detect_open_apps,
+            commands::open_with::open_with,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

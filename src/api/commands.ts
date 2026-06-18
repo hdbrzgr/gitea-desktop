@@ -328,3 +328,32 @@ export const syncSubmodules = (repoId: string, recursive = true) =>
 
 export const fetchSubmoduleUpdates = (repoId: string, recursive = true) =>
   invoke<void>("fetch_submodule_updates", { repoId, recursive });
+
+// --- Open with -------------------------------------------------------------
+
+export type OpenTarget =
+  | "terminal"
+  | "vscode"
+  | "cursor"
+  | "finder"
+  | "zed";
+
+export interface AppAvailability {
+  target: OpenTarget;
+  label: string;
+  available: boolean;
+}
+
+export const detectOpenApps = () =>
+  invoke<AppAvailability[]>("detect_open_apps");
+
+export const openWith = (
+  repoId: string,
+  target: OpenTarget,
+  subPath?: string | null,
+) =>
+  invoke<void>("open_with", {
+    repoId,
+    target,
+    subPath: subPath ?? null,
+  });
