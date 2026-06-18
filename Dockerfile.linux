@@ -1,0 +1,44 @@
+# Build image for producing a Gitea Desktop .deb package.
+# Based on Debian 12 (Bookworm) so the resulting package links against
+# widely-available library versions and runs on current Debian/Ubuntu.
+#
+# Usage:
+#   docker build -t gitea-desktop-linux -f Dockerfile.linux .
+#   docker run --rm -v "$PWD:/work" -w /work gitea-desktop-linux \
+#       bash -c 'npm ci && npm run tauri build'
+
+FROM debian:bookworm-slim
+
+# Tauri 2 Linux build dependencies (webkit2gtk, gtk3, librsvg, etc.) plus
+# Node.js and Rust toolchains.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl wget gnupg2 \
+        libwebkit2gtk-4.1-dev \
+        build-essential \
+        curl \
+        wget \
+        file \
+        libxdo-dev \
+        libssl-dev \
+        libayatana-appindicator3-dev \
+        librsvg2-dev \
+        libgtk-3-dev \
+        libjavascriptcoregtk-4.1-dev \
+        libsoup-3.0-dev \
+        dpkg \
+        pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node.js 22 (LTS) via NodeSource.
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Rust stable via rustup.
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal \
+    && chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+
+WORKDIR /work
