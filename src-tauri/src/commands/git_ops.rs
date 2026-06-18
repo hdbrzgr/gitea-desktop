@@ -154,15 +154,24 @@ pub async fn git_fetch(
     Ok(())
 }
 
-/// Pull (fast-forward) from origin.
+/// Pull (fast-forward) from origin. `recurse_submodules` defaults to true,
+/// so a pull that moves submodule pointers also checks out the new commits
+/// in each submodule (`--recurse-submodules`).
 #[tauri::command]
 pub async fn git_pull(
     repo_id: String,
+    recurse_submodules: Option<bool>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
     let path = repo_path(&state, &repo_id)?;
     let auth = auth_header_for_repo(&state, &repo_id)?;
-    let out = run_in(&path, &["pull", "--ff-only", "origin"], auth.as_deref()).await?;
+    let mut args: Vec<String> = vec!["pull".into(), "--ff-only".into()];
+    if recurse_submodules.unwrap_or(true) {
+        args.push("--recurse-submodules".into());
+    }
+    args.push("origin".into());
+    let refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    let out = run_in(&path, &refs, auth.as_deref()).await?;
     out.require_success("git pull")?;
     Ok(())
 }

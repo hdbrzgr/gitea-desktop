@@ -1,5 +1,5 @@
-/** Top toolbar: repo identity, branch picker, sync actions. Loads branch +
- * status data itself so a sync or branch switch can refresh everything. */
+/** Top toolbar: repo identity, branch picker, submodules, sync actions. */
+import { Boxes } from "lucide-react";
 import { useUiStore } from "../../store/ui";
 import { useReposStore } from "../../store/repos";
 import { useBranches } from "../../hooks/useBranches";
@@ -9,6 +9,7 @@ import { SyncButtons } from "./SyncButtons";
 
 export function Toolbar() {
   const activeRepoId = useUiStore((s) => s.activeRepoId);
+  const openDialog = useUiStore((s) => s.openDialog);
   const repos = useReposStore((s) => s.repos);
   const repo = repos.find((r) => r.id === activeRepoId) ?? null;
 
@@ -51,6 +52,16 @@ export function Toolbar() {
             current={currentBranch}
             onAfterChange={refreshAll}
           />
+
+          {/* Submodules */}
+          <button
+            onClick={() => openDialog({ kind: "submodules" })}
+            className="flex items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1 text-sm hover:bg-[var(--color-surface-hover)] cursor-pointer"
+            title="Manage submodules"
+          >
+            <Boxes size={14} />
+            Submodules
+          </button>
         </>
       )}
 

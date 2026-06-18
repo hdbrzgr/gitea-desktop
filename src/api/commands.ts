@@ -96,11 +96,13 @@ export const cloneRepo = (
   url: string,
   parentDir: string,
   accountId?: string,
+  recurseSubmodules = true,
 ) =>
   invoke<import("./types").LocalRepo>("clone_repo", {
     url,
     parentDir,
     accountId: accountId ?? null,
+    recurseSubmodules,
   });
 
 export const addLocalRepo = (path: string) =>
@@ -232,3 +234,45 @@ export const gitCommitFileDiff = (
   sha: string,
   filePath: string,
 ) => invoke<string>("git_commit_file_diff", { repoId, sha, filePath });
+
+// --- Submodules ------------------------------------------------------------
+
+export type SubmoduleState =
+  | "up_to_date"
+  | "not_initialized"
+  | "modified"
+  | "conflicted"
+  | "unknown";
+
+export interface Submodule {
+  path: string;
+  sha: string;
+  short_sha: string;
+  branch: string | null;
+  url: string;
+  state: SubmoduleState;
+  description: string | null;
+}
+
+export const listSubmodules = (repoId: string) =>
+  invoke<Submodule[]>("list_submodules", { repoId });
+
+export const initSubmodules = (repoId: string, paths?: string[]) =>
+  invoke<void>("init_submodules", { repoId, paths: paths ?? null });
+
+export const updateSubmodules = (
+  repoId: string,
+  paths?: string[],
+  recursive = true,
+) =>
+  invoke<void>("update_submodules", {
+    repoId,
+    paths: paths ?? null,
+    recursive,
+  });
+
+export const syncSubmodules = (repoId: string, recursive = true) =>
+  invoke<void>("sync_submodules", { repoId, recursive });
+
+export const fetchSubmoduleUpdates = (repoId: string, recursive = true) =>
+  invoke<void>("fetch_submodule_updates", { repoId, recursive });

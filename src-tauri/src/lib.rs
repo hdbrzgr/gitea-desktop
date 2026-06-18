@@ -66,6 +66,11 @@ pub fn run() {
             commands::log::git_commit_info,
             commands::log::git_commit_files,
             commands::log::git_commit_file_diff,
+            commands::submodules::list_submodules,
+            commands::submodules::init_submodules,
+            commands::submodules::update_submodules,
+            commands::submodules::sync_submodules,
+            commands::submodules::fetch_submodule_updates,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

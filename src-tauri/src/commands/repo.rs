@@ -25,11 +25,16 @@ fn repo_id_from_path(path: &Path) -> String {
 }
 
 /// Clone `url` into `parent_dir/<repo_name>`. Returns the new LocalRepo.
+///
+/// `recurse_submodules` defaults to true so submodules are fetched
+/// automatically (their credentials reuse the parent's auth header via
+/// `http.extraHeader`, which git propagates to submodules on clone).
 #[tauri::command]
 pub async fn clone_repo(
     url: String,
     parent_dir: String,
     account_id: Option<String>,
+    recurse_submodules: Option<bool>,
     state: State<'_, ConfigState>,
 ) -> AppResult<LocalRepo> {
     // Validate the remote parses so we can derive a name + match an account.
@@ -66,6 +71,12 @@ pub async fn clone_repo(
         args.push(format!("http.extraHeader={header}"));
     }
     args.push("clone".into());
+    // Recurse into submodules by default so submodule-bearing repos clone
+    // ready to use. `--recurse-submodules` is compatible with auth injection
+    // and propagates the extraHeader to submodule fetches.
+    if recurse_submodules.unwrap_or(true) {
+        args.push("--recurse-submodules".into());
+    }
     args.push(url.clone());
     args.push(target_str.clone());
 

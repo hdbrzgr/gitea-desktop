@@ -9,3 +9,4 @@ pub mod helpers;
 pub mod log;
 pub mod ping;
 pub mod repo;
+pub mod submodules;
