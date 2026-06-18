@@ -2,10 +2,24 @@
 # Based on Debian 12 (Bookworm) so the resulting package links against
 # widely-available library versions and runs on current Debian/Ubuntu.
 #
+# The Dockerfile is architecture-agnostic: Debian's repos serve the matching
+# arch libraries automatically. Pass `--platform linux/<arch>` to pick the
+# target. On Apple Silicon the native (fast) build is arm64; amd64 builds via
+# QEMU emulation (much slower, ~5-10 min).
+#
 # Usage:
-#   docker build -t gitea-desktop-linux -f Dockerfile.linux .
-#   docker run --rm -v "$PWD:/work" -w /work gitea-desktop-linux \
-#       bash -c 'npm ci && npm run tauri build'
+#   # arm64 (native on Apple Silicon — fast)
+#   docker build -t gitea-desktop-linux-arm64 -f Dockerfile.linux .
+#   docker run --rm -v "$PWD:/work" -w /work gitea-desktop-linux-arm64 \
+#       bash -c 'npm ci && npm run tauri build -- --bundles deb'
+#
+#   # amd64 / x86_64 (via QEMU — slower)
+#   docker build --platform linux/amd64 -t gitea-desktop-linux-amd64 -f Dockerfile.linux .
+#   docker run --rm --platform linux/amd64 -v "$PWD:/work" -w /work \
+#       gitea-desktop-linux-amd64 \
+#       bash -c 'npm ci && npm run tauri build -- --bundles deb'
+#
+# Output lands in src-tauri/target/release/bundle/deb/.
 
 FROM debian:bookworm-slim
 
