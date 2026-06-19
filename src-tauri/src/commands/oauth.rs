@@ -9,7 +9,7 @@
 //!   4. On callback: exchange the code at `/login/oauth/access_token`.
 //!   5. Verify by calling `/api/v1/user`, then store the token set + account.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use tauri::State;
 use tauri_plugin_opener::OpenerExt;
 
