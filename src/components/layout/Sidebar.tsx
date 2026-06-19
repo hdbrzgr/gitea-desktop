@@ -1,6 +1,14 @@
 /** Left navigation: accounts header, repo list, add-repo actions, settings. */
 import { useEffect } from "react";
-import { FolderPlus, GitFork, Plus, RefreshCw, Settings, X } from "lucide-react";
+import {
+  FolderPlus,
+  GitFork,
+  LogOut,
+  Plus,
+  RefreshCw,
+  Settings,
+  X,
+} from "lucide-react";
 import { useUiStore } from "../../store/ui";
 import { useAccountsStore } from "../../store/accounts";
 import { useReposStore } from "../../store/repos";
@@ -10,6 +18,17 @@ import giteaLogo from "../../assets/gitea-logo.svg";
 export function Sidebar() {
   const openDialog = useUiStore((s) => s.openDialog);
   const accounts = useAccountsStore((s) => s.accounts);
+  const removeAccount = useAccountsStore((s) => s.remove);
+
+  const logout = (id: string, username: string) => {
+    if (
+      !confirm(
+        `Log out of ${username}?\n\nThis removes the account and its stored token from this app. Cloned repositories on disk are not affected.`,
+      )
+    )
+      return;
+    removeAccount(id);
+  };
 
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-[var(--color-border-muted)] bg-[var(--color-canvas-inset)]">
@@ -53,7 +72,7 @@ export function Sidebar() {
             {accounts.map((a) => (
               <li
                 key={a.id}
-                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs"
+                className="group flex items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-[var(--color-surface-hover)]"
               >
                 {a.avatar_url ? (
                   <img src={a.avatar_url} alt="" className="h-5 w-5 rounded-full" />
@@ -68,6 +87,13 @@ export function Sidebar() {
                     {a.url.replace(/^https?:\/\//, "")}
                   </div>
                 </div>
+                <button
+                  onClick={() => logout(a.id, a.username)}
+                  className="shrink-0 rounded p-1 text-[var(--color-fg-subtle)] opacity-0 transition-opacity hover:bg-[var(--color-danger)]/20 hover:text-[var(--color-danger)] group-hover:opacity-100 cursor-pointer"
+                  title={`Log out of ${a.username}`}
+                >
+                  <LogOut size={13} />
+                </button>
               </li>
             ))}
           </ul>
