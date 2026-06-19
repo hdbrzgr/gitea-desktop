@@ -5,6 +5,7 @@ import { AccountSetupDialog } from "../accounts/AccountSetupDialog";
 import { RemoteRepoBrowser } from "../repos/RemoteRepoBrowser";
 import { AddLocalRepoDialog } from "../repos/AddLocalRepoDialog";
 import { SubmodulesDialog } from "../submodules/SubmodulesDialog";
+import { SettingsDialog } from "../settings/SettingsDialog";
 
 export function DialogHost() {
   const dialog = useUiStore((s) => s.dialog);
@@ -35,6 +36,10 @@ export function DialogHost() {
         onClose={close}
       />
     );
+  }
+
+  if (dialog.kind === "settings") {
+    return <SettingsDialog onClose={close} />;
   }
 
   return null;

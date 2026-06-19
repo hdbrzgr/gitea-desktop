@@ -12,7 +12,8 @@ export type Dialog =
   | { kind: "clone" }
   | { kind: "add-local" }
   | { kind: "add-account" }
-  | { kind: "submodules" };
+  | { kind: "submodules" }
+  | { kind: "settings" };
 
 interface UiState {
   /** id of the selected LocalRepo, or null when none is open. */

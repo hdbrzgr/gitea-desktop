@@ -11,4 +11,5 @@ pub mod oauth;
 pub mod open_with;
 pub mod ping;
 pub mod repo;
+pub mod settings;
 pub mod submodules;

@@ -366,3 +366,18 @@ export const openWith = (
     target,
     subPath: subPath ?? null,
   });
+
+// --- Settings --------------------------------------------------------------
+
+export interface EffectiveSettings {
+  defaultCloneDir: string;
+}
+
+export const getSettings = () =>
+  invoke<EffectiveSettings>("get_settings");
+
+export const setDefaultCloneDir = (dir: string) =>
+  invoke<EffectiveSettings>("set_default_clone_dir", { dir });
+
+export const resetDefaultCloneDir = () =>
+  invoke<EffectiveSettings>("reset_default_clone_dir");

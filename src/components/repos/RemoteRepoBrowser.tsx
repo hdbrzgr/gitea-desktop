@@ -1,5 +1,5 @@
 /** Browse, search, and clone repositories from a connected Gitea instance. */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Loader2,
   Search,
@@ -14,7 +14,7 @@ import { Button } from "../common/Button";
 import { useAccountsStore } from "../../store/accounts";
 import { useReposStore } from "../../store/repos";
 import { useUiStore } from "../../store/ui";
-import { listMyRepos, searchRepos } from "../../api/commands";
+import { getSettings, listMyRepos, searchRepos } from "../../api/commands";
 import type { GiteaRepo, AppError } from "../../api/types";
 import { relativeTime } from "../../lib/format";
 
@@ -30,12 +30,29 @@ export function RemoteRepoBrowser({ onClose }: Props) {
 
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [query, setQuery] = useState("");
+  // Default to the configured default clone dir (~/Documents/Gitea unless
+  // changed in Settings). Loaded once on mount.
   const [parentDir, setParentDir] = useState("");
   const [repos, setRepos] = useState<GiteaRepo[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"mine" | "search">("mine");
   const [cloning, setCloning] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSettings()
+      .then((s) => {
+        if (!cancelled && parentDir === "") setParentDir(s.defaultCloneDir);
+      })
+      .catch(() => {
+        // Settings unavailable — leave blank, user can type a path.
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const load = async (selectedId: string, m: "mine" | "search", q: string) => {
     if (!selectedId) return;

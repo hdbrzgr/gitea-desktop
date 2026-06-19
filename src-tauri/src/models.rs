@@ -46,9 +46,29 @@ pub struct LocalRepo {
     pub account_id: Option<String>,
 }
 
+/// User-configurable application settings. Stored as a nested object in
+/// `AppConfig` so they're persisted alongside accounts/repos.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Settings {
+    /// Default directory new clones land in. Defaults to ~/Documents/Gitea
+    /// when unset (computed lazily — see `settings::default_clone_dir()`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub default_clone_dir: Option<String>,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            default_clone_dir: None,
+        }
+    }
+}
+
 /// Persisted application state. Written to `<app_data_dir>/config.json`.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppConfig {
     pub accounts: Vec<Account>,
     pub repos: Vec<LocalRepo>,
+    #[serde(default)]
+    pub settings: Settings,
 }

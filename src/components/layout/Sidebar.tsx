@@ -1,6 +1,6 @@
-/** Left navigation: accounts header, repo list, add-repo actions. */
+/** Left navigation: accounts header, repo list, add-repo actions, settings. */
 import { useEffect } from "react";
-import { FolderPlus, GitFork, Plus, RefreshCw, X } from "lucide-react";
+import { FolderPlus, GitFork, Plus, RefreshCw, Settings, X } from "lucide-react";
 import { useUiStore } from "../../store/ui";
 import { useAccountsStore } from "../../store/accounts";
 import { useReposStore } from "../../store/repos";
@@ -13,10 +13,18 @@ export function Sidebar() {
 
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-[var(--color-border-muted)] bg-[var(--color-canvas-inset)]">
-      {/* Brand */}
+      {/* Brand + settings */}
       <div className="flex h-12 items-center gap-2 border-b border-[var(--color-border-muted)] px-4">
         <img src={giteaLogo} alt="Gitea" className="h-6 w-6" />
         <span className="font-semibold text-sm">Gitea Desktop</span>
+        <div className="flex-1" />
+        <button
+          onClick={() => openDialog({ kind: "settings" })}
+          className="rounded p-1 text-[var(--color-fg-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-fg-default)] cursor-pointer"
+          title="Settings"
+        >
+          <Settings size={15} />
+        </button>
       </div>
 
       {/* Accounts */}
