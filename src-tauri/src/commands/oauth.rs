@@ -67,7 +67,10 @@ pub async fn start_oauth_login(
 
     // Spin up the loopback callback server.
     let (port, rx) = spawn_callback_server(csrf_state.clone()).await?;
-    let redirect_uri = format!("http://127.0.0.1:{port}/callback");
+    // Gitea registers the redirect URI as `http://127.0.0.1/` (root path, any
+    // port per RFC 8252). It matches the PATH exactly (ignoring port), so we
+    // must use the root path here — NOT `/callback`. See Gitea OAuth2 docs.
+    let redirect_uri = format!("http://127.0.0.1:{port}/");
 
     // Build the authorize URL.
     let mut authorize_url = format!(
