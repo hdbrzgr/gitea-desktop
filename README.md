@@ -100,4 +100,4 @@ src-tauri/            Rust backend
 
 ## 📄 License
 
-Private — not currently licensed for redistribution.
+Released under the [MIT License](LICENSE).
