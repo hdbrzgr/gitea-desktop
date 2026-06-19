@@ -1,20 +1,28 @@
-# Gitea Desktop
+# 🍵 Gitea Desktop
 
 A native desktop client for [Gitea](https://gitea.io) — manage your repositories, branches, commits, and pull requests without leaving your desktop. Built with [Tauri 2](https://tauri.app), React, and Rust.
 
-## Features
+## 📥 Download
 
-- **Multi-account** — connect multiple Gitea accounts via OAuth2 or personal access tokens. Credentials are stored securely in the OS keychain (macOS Keychain, Windows Credential Manager, Linux Secret Service).
-- **Repository management** — clone remote repositories, add existing local clones, browse your repositories, and search across the instance.
-- **Working tree** — view status and diffs, stage/unstage files, discard changes, and commit with a built-in diff viewer.
-- **Sync** — fetch, pull, and push against your Gitea remotes.
-- **Branches** — list, create, checkout, rename, and delete branches.
-- **History** — browse the commit log with per-commit detail and file diffs.
-- **Pull requests** — list, create, and merge pull requests.
-- **Submodules** — list, init, update, and sync submodules.
-- **Open with** — launch repositories in your editor, terminal, or other detected apps.
+Grab the latest build from [**Releases**](https://github.com/hdbrzgr/gitea-desktop/releases/latest).
 
-## Tech stack
+- 🍎 **macOS (Apple Silicon)** — `GiteaDesktop_0.1.0_aarch64.dmg`
+
+> The app isn't notarized yet. On first launch, right-click the app → **Open**, or allow it under **System Settings → Privacy & Security**.
+
+## ✨ Features
+
+- 👥 **Multi-account** — connect multiple Gitea accounts via OAuth2 or personal access tokens. Credentials are stored securely in the OS keychain (macOS Keychain, Windows Credential Manager, Linux Secret Service).
+- 📦 **Repository management** — clone remote repositories, add existing local clones, browse your repositories, and search across the instance.
+- 📝 **Working tree** — view status and diffs, stage/unstage files, discard changes, and commit with a built-in diff viewer.
+- 🔄 **Sync** — fetch, pull, and push against your Gitea remotes.
+- 🌿 **Branches** — list, create, checkout, rename, and delete branches.
+- 🕑 **History** — browse the commit log with per-commit detail and file diffs.
+- 🔀 **Pull requests** — list, create, and merge pull requests.
+- 🧩 **Submodules** — list, init, update, and sync submodules.
+- 🚀 **Open with** — launch repositories in your editor, terminal, or other detected apps.
+
+## 🛠️ Tech stack
 
 | Layer    | Tools                                                              |
 | -------- | ----------------------------------------------------------------- |
@@ -22,14 +30,14 @@ A native desktop client for [Gitea](https://gitea.io) — manage your repositori
 | Backend  | Rust, Tauri 2, `reqwest`, `keyring`                               |
 | Targets  | macOS, Windows, Linux                                              |
 
-## Prerequisites
+## 📋 Prerequisites
 
 - [Node.js](https://nodejs.org) 18+
 - [Rust](https://rustup.rs) (stable)
 - Platform Tauri dependencies — see the [Tauri prerequisites guide](https://tauri.app/start/prerequisites/)
 - `git` available on your `PATH`
 
-## Development
+## 💻 Development
 
 ```bash
 # install dependencies
@@ -44,14 +52,14 @@ npm run lint
 
 `npm run dev` runs the Vite frontend alone in the browser; `npm run tauri dev` runs the full desktop app.
 
-## Building
+## 🏗️ Building
 
 ```bash
 # production build (frontend + Tauri bundle)
 npm run tauri build
 ```
 
-### macOS
+### 🍎 macOS
 
 ```bash
 # build and code-sign
@@ -63,11 +71,11 @@ npm run dist:macos
 
 Signing is handled by `scripts/sign-macos.sh`.
 
-### Linux
+### 🐧 Linux
 
 A `Dockerfile.linux` is provided for reproducible Linux builds.
 
-## Configuration
+## ⚙️ Configuration
 
 On first launch, add a Gitea account from **Settings**:
 
@@ -76,7 +84,7 @@ On first launch, add a Gitea account from **Settings**:
 
 Tokens are never written to disk in plaintext — they live in the OS keychain. A default clone directory can be set in Settings (defaults to `~/Documents/Gitea`).
 
-## Project structure
+## 📂 Project structure
 
 ```
 src/                  React frontend
@@ -90,6 +98,6 @@ src-tauri/            Rust backend
   src/models.rs       shared types
 ```
 
-## License
+## 📄 License
 
 Private — not currently licensed for redistribution.
