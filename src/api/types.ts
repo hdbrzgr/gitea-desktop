@@ -22,6 +22,8 @@ export interface Account {
   username: string;
   display_name: string | null;
   avatar_url: string | null;
+  /** "pat" (personal access token) or "oauth" (OAuth2, auto-refreshed). */
+  auth_method: string | null;
 }
 
 export interface LocalRepo {

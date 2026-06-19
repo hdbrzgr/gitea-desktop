@@ -29,6 +29,15 @@ export interface AddAccountInput {
 export const addAccount = (input: AddAccountInput) =>
   invoke<Account>("add_account", { input });
 
+export interface OauthLoginInput {
+  url: string;
+  clientId: string;
+  clientSecret?: string | null;
+}
+
+export const startOauthLogin = (input: OauthLoginInput) =>
+  invoke<Account>("start_oauth_login", { input });
+
 export const listAccounts = () => invoke<Account[]>("list_accounts");
 
 export const removeAccount = (accountId: string) =>

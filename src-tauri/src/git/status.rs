@@ -173,10 +173,18 @@ fn parse_branch_header(header: &str, status: &mut GitStatus) {
         return;
     }
 
-    // Split off the optional "[ahead N, behind M]" tail.
-    let (main, tracking) = match rest.rsplit_once(' ') {
-        Some((m, tail)) if tail.starts_with('[') && tail.ends_with(']') => (m, Some(tail)),
-        _ => (rest, None),
+    // Split off the optional "[ahead N, behind M]" tail. The tracking block
+    // is always a trailing "[...]" — but it can contain internal spaces
+    // (e.g. "[ahead 2, behind 1]"), so we locate the LAST '[' that's followed
+    // by a matching ']' at the very end, rather than splitting on a space.
+    let (main, tracking) = if rest.ends_with(']') {
+        if let Some(open) = rest.rfind(" [") {
+            (rest[..open].to_string(), Some(rest[open + 1..].to_string()))
+        } else {
+            (rest.to_string(), None)
+        }
+    } else {
+        (rest.to_string(), None)
     };
 
     // main is now e.g. "main" or "main...origin/main"

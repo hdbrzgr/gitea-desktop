@@ -23,6 +23,11 @@ pub struct Account {
     pub display_name: Option<String>,
     /// Avatar URL, if known.
     pub avatar_url: Option<String>,
+    /// How this account authenticates: `"pat"` (personal access token) or
+    /// `"oauth"` (OAuth2 access token, auto-refreshed). `None` defaults to
+    /// `"pat"` for accounts created before this field existed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub auth_method: Option<String>,
 }
 
 /// A local working copy tracked by the app.

@@ -7,6 +7,7 @@ pub mod gitea_proxy;
 pub mod git_ops;
 pub mod helpers;
 pub mod log;
+pub mod oauth;
 pub mod open_with;
 pub mod ping;
 pub mod repo;

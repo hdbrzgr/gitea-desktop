@@ -10,10 +10,26 @@ use crate::gitea::{Branch, Client, CreatePullRequest, PullRequest, Repo, Version
 use crate::models::LocalRepo;
 
 /// Build a Gitea client for the account. We acquire the config lock only
-/// briefly to look up the URL + token (both cheap to clone), then release
-/// it before any `.await` so no borrow is held across the network call.
-fn make_client(state: &State<'_, ConfigState>, account_id: &str) -> AppResult<Client> {
-    state.read(|cfg| crate::commands::account::client_for_account(cfg, account_id))
+/// briefly to look up the URL + auth method, then release it before any
+/// `.await` so no borrow is held across the (possibly refreshing) call.
+async fn make_client(state: &State<'_, ConfigState>, account_id: &str) -> AppResult<Client> {
+    let (url, auth_method) = state.read(|cfg| {
+        let acc = cfg
+            .accounts
+            .iter()
+            .find(|a| a.id == account_id)
+            .ok_or_else(|| {
+                crate::error::AppError::NotFound(format!("Account {account_id} not found"))
+            })?;
+        Ok::<_, crate::error::AppError>((acc.url.clone(), acc.auth_method.clone()))
+    })?;
+
+    if auth_method.as_deref() == Some("oauth") {
+        crate::oauth2::refresh::refresh_if_needed(account_id).await?;
+    }
+
+    let token = crate::commands::account::token_for(account_id)?;
+    Client::new(&url, &token)
 }
 
 #[tauri::command]
@@ -21,7 +37,7 @@ pub async fn get_gitea_version(
     account_id: String,
     state: State<'_, ConfigState>,
 ) -> AppResult<Version> {
-    let client = make_client(&state, &account_id)?;
+    let client = make_client(&state, &account_id).await?;
     client.get_version().await
 }
 
@@ -32,7 +48,7 @@ pub async fn list_my_repos(
     limit: Option<i32>,
     state: State<'_, ConfigState>,
 ) -> AppResult<Vec<Repo>> {
-    let client = make_client(&state, &account_id)?;
+    let client = make_client(&state, &account_id).await?;
     client
         .list_my_repos(page.unwrap_or(1), limit.unwrap_or(50))
         .await
@@ -46,7 +62,7 @@ pub async fn search_repos(
     limit: Option<i32>,
     state: State<'_, ConfigState>,
 ) -> AppResult<Vec<Repo>> {
-    let client = make_client(&state, &account_id)?;
+    let client = make_client(&state, &account_id).await?;
     client
         .search_repos(&query, page.unwrap_or(1), limit.unwrap_or(50))
         .await
@@ -59,7 +75,7 @@ pub async fn get_repo(
     repo: String,
     state: State<'_, ConfigState>,
 ) -> AppResult<Repo> {
-    let client = make_client(&state, &account_id)?;
+    let client = make_client(&state, &account_id).await?;
     client.get_repo(&owner, &repo).await
 }
 
@@ -70,7 +86,7 @@ pub async fn list_remote_branches(
     repo: String,
     state: State<'_, ConfigState>,
 ) -> AppResult<Vec<Branch>> {
-    let client = make_client(&state, &account_id)?;
+    let client = make_client(&state, &account_id).await?;
     client.list_branches(&owner, &repo).await
 }
 
@@ -82,7 +98,7 @@ pub async fn list_pulls(
     state: Option<String>,
     cfg_state: State<'_, ConfigState>,
 ) -> AppResult<Vec<PullRequest>> {
-    let client = make_client(&cfg_state, &account_id)?;
+    let client = make_client(&cfg_state, &account_id).await?;
     client
         .list_pulls(&owner, &repo, state.as_deref().unwrap_or("open"))
         .await
@@ -106,7 +122,7 @@ pub async fn create_pull(
     input: CreatePullBody,
     state: State<'_, ConfigState>,
 ) -> AppResult<PullRequest> {
-    let client = make_client(&state, &account_id)?;
+    let client = make_client(&state, &account_id).await?;
     let body = CreatePullRequest {
         title: input.title,
         body: input.body,
@@ -126,7 +142,7 @@ pub async fn merge_pull(
     style: Option<String>,
     state: State<'_, ConfigState>,
 ) -> AppResult<()> {
-    let client = make_client(&state, &account_id)?;
+    let client = make_client(&state, &account_id).await?;
     let do_ = match style.as_deref().unwrap_or("merge") {
         "squash" => "squash",
         "rebase" => "rebase",

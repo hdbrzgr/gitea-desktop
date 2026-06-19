@@ -15,6 +15,11 @@ interface AccountsState {
 
   refresh: () => Promise<void>;
   add: (url: string, token: string) => Promise<Account>;
+  addWithOauth: (
+    url: string,
+    clientId: string,
+    clientSecret?: string | null,
+  ) => Promise<Account>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -35,6 +40,12 @@ export const useAccountsStore = create<AccountsState>((set, get) => ({
 
   add: async (url, token) => {
     const account = await api.addAccount({ url, token });
+    await get().refresh();
+    return account;
+  },
+
+  addWithOauth: async (url, clientId, clientSecret) => {
+    const account = await api.startOauthLogin({ url, clientId, clientSecret });
     await get().refresh();
     return account;
   },

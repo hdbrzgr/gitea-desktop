@@ -13,6 +13,7 @@ mod error;
 mod git;
 mod gitea;
 mod models;
+mod oauth2;
 
 use config::store::{load_config, ConfigState};
 use tauri::Manager;
@@ -73,6 +74,7 @@ pub fn run() {
             commands::submodules::fetch_submodule_updates,
             commands::open_with::detect_open_apps,
             commands::open_with::open_with,
+            commands::oauth::start_oauth_login,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
